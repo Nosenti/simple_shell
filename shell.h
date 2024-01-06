@@ -46,8 +46,12 @@ typedef struct _pipeline {
     char *output_file;     
 } Pipeline;
 
-
-
+// string methods
+char *_strcpy(char *dest, char *src);
+int _strlen(char *s);
+void _puts(char *str);
+int _putchar(char c);
+int _strcmp(char *s1, char *s2);
 
 const char *TT_to_str(TokenType tt);
 CList TOK_tokenize_input(const char *input, char *errmsg, size_t errmsg_sz);

@@ -1,40 +1,36 @@
 #include "shell.h"
-#include <readline/readline.h>
-#include <readline/history.h>
 
 // Declarations
 void execute_pipeline(Pipeline *pipeline);
 void execute_command(char *cmd, char **args);
 int is_builtin_command(char *cmd);
 void handle_builtin_command(char *cmd, char **args);
-
+extern char **environ;
 // Main
 int main(int argc, char *argv[])
 {
     char *input;
     CList tokens = NULL;
+    size_t len = 0;
+    ssize_t nread = 0;
     char errmsg[128];
 
-    printf("Welcome to Plaid Shell!\n");
+    _puts("Welcome to Plaid Shell!\n");
 
-    while (1)
+    while (nread != EOF)
     {
-        errmsg[0] = '\0';
+        printf("\n#? ");
+        fflush(stdout);  // Ensure prompt is printed immediately
 
-        input = readline("\n#? ");
-        if (input == NULL || strcasecmp(input, "exit") == 0 || strcasecmp(input, "quit") == 0)
-        {
-            free(input);
-            break;
+        nread = getline(&input, &len, stdin); // Read the line
+        if(input[nread-1] == '\n') {
+            input[nread-1] = '\0';
         }
 
-        if (*input == '\0')
-        {
-            free(input);
+        if (input[0] == '\0') { // Empty command
             continue;
         }
-
-        add_history(input);
+        
         tokens = TOK_tokenize_input(input, errmsg, sizeof(errmsg));
 
         if (tokens == NULL)
@@ -57,9 +53,34 @@ int main(int argc, char *argv[])
             TOK_free_tokens(tokens);
         }
 
-        free(input);
+       
     }
     return 0;
+}
+
+char* find_command_in_path(const char* cmd) {
+    char *path = getenv("PATH");
+    if (!path) return NULL;  // PATH not found
+
+    // Make a copy of PATH because strtok modifies the original string.
+    char *path_copy = strdup(path);
+    char *dir = strtok(path_copy, ":");
+
+    while (dir != NULL) {
+        char *full_path = malloc(strlen(dir) + strlen(cmd) + 2); // +2 for '/' and '\0'
+        sprintf(full_path, "%s/%s", dir, cmd);
+
+        if (access(full_path, X_OK) == 0) {
+            free(path_copy); // Clean up the copy of PATH
+            return full_path; // full_path should be freed by the caller after use
+        }
+
+        free(full_path); // Clean up the full path
+        dir = strtok(NULL, ":"); // Move to the next directory
+    }
+
+    free(path_copy); // Clean up the copy of PATH
+    return NULL; // Command not found in any PATH directories
 }
 
 // Implementations of helper functions
@@ -86,7 +107,10 @@ void execute_pipeline(Pipeline *pipeline)
         // Convert arguments list to array format
         int num_args = CL_length(cmd->args);
         char **args = malloc((num_args + 2) * sizeof(char *)); 
-        args[0] = cmd->name;
+        args[0] = find_command_in_path(cmd->name);
+        if (!args[0]) {
+            args[0] = cmd->name; // If not found, use the command as is
+        }
         for (int j = 0; j < num_args; j++)
         {
             Token arg = CL_nth(cmd->args, j); 
@@ -98,6 +122,7 @@ void execute_pipeline(Pipeline *pipeline)
         if (is_builtin_command(cmd->name))
         {
             handle_builtin_command(cmd->name, args);
+            if (args[0] != cmd->name) free(args[0]);
             free(args);
             continue;
         }
@@ -129,13 +154,13 @@ void execute_pipeline(Pipeline *pipeline)
                 close(pipe_fds[j]);
             }
 
-            if (execvp(cmd->name, args) == -1)
+            if (execve(args[0], args, environ) == -1)
             {
-                perror("execvp");
+                perror("execve");
                 exit(EXIT_FAILURE);
             }
         }
-
+        if (args[0] != cmd->name) free(args[0]); 
         free(args);
     }
 
@@ -154,6 +179,11 @@ void execute_pipeline(Pipeline *pipeline)
 
 void execute_command(char *cmd, char **args)
 {
+    char *full_path = find_command_in_path(cmd);
+    if (!full_path) {
+        full_path = cmd; // Assume cmd is already a full path or error message will be shown by execve
+    }
+
     pid_t pid = fork();
 
     if (pid == -1)
@@ -162,15 +192,15 @@ void execute_command(char *cmd, char **args)
     }
     else if (pid == 0)
     {
-        printf("Executing command: %s\n", cmd);
+        _puts(cmd);
         for (int i = 0; args[i] != NULL; i++)
         {
             printf("arg[%d]: %s\n", i, args[i]);
         }
 
-        if (execvp(cmd, args) == -1)
+        if (execve(full_path, args, environ) == -1)
         {
-            perror("execvp");
+            perror("execve");
             exit(EXIT_FAILURE);
         }
     }
@@ -178,6 +208,9 @@ void execute_command(char *cmd, char **args)
     {
         int status;
         waitpid(pid, &status, 0);
+    }
+    if (full_path != cmd) {
+        free(full_path); // Only free if a new path was allocated
     }
 }
 
@@ -188,7 +221,7 @@ int is_builtin_command(char *cmd)
 
     for (int i = 0; builtins[i] != NULL; i++)
     {
-        if (strcmp(cmd, builtins[i]) == 0)
+        if (_strcmp(cmd, builtins[i]) == 0)
         {
             return 1;
         }
