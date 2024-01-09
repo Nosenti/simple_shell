@@ -22,9 +22,6 @@ int main(void)
     ssize_t nread = 0;
     char errmsg[128];
 
-   
-    signal(SIGINT, sigint_handler);
-
     while (1)
     {
         _puts("#cisfun$ ");
@@ -81,14 +78,6 @@ int main(void)
     }
     return 0;
 } 
-
-void sigint_handler(int sig)
-{
-    (void)sig;
-
-    _puts("\n#cisfun$ ");
-    signal(SIGINT, sigint_handler);
-}
 
 char *find_command_in_path(char *cmd)
 {

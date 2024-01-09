@@ -23,7 +23,6 @@ Pipeline *Pipeline_new() {
 
 void Pipeline_free(Pipeline *pipeline) {
     int i;
-    
     if (pipeline == NULL) return;
 
     for (i = 0; i < pipeline->command_count; ++i) {
@@ -79,44 +78,18 @@ void Pipeline_add_command(Pipeline *pipeline, char *command_name) {
     pipeline->command_count++;
 }
 
-void Pipeline_add_argument(Pipeline *pipeline, char *argument) {
-    Command *last_command;
+void Pipeline_add_argument(Pipeline *pipeline, const char *argument) {
+    
     Token argToken;
-
+    Command *last_command = &pipeline->commands[pipeline->command_count - 1];
+    
     if (pipeline == NULL || pipeline->command_count == 0 || argument == NULL) return;
-    last_command = &pipeline->commands[pipeline->command_count - 1];
+
+    
     argToken.type = TOK_WORD;
     argToken.value = _strdup(argument);
 
     CL_append(last_command->args, *(CListElementType *)&argToken);
 }
 
-
-
-void Pipeline_print(const Pipeline *pipeline) {
-    int i;
-    int j;
-    if (pipeline == NULL) return;
-
-    for (i = 0; i < pipeline->command_count; ++i) {
-        Command *cmd = &pipeline->commands[i];
-        _puts(cmd->name);
-
-        for (j = 0; j < CL_length(cmd->args); ++j) {
-            Token arg = CL_nth(cmd->args, j);
-            _puts(arg.value);
-        }
-
-        _puts("\n");
-    }
-    
-    if (pipeline->input_file) {
-        _puts(pipeline->input_file);
-        _puts("\n");
-    }
-    if (pipeline->output_file) {
-        _puts(pipeline->output_file);
-         _puts("\n");
-    }
-}
 

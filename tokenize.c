@@ -34,17 +34,16 @@ const char *TT_to_str(TokenType tt)
   __builtin_unreachable();
 }
 
-CList TOK_tokenize_input(const char *input)
+CList TOK_tokenize_input(const char *input, char *errmsg __attribute__((unused)), size_t errmsg_sz __attribute__((unused)))
 {
   CList tokens = CL_new();
 
   const char *curr = input;
-  Token token;
-  char buffer[1024];
-  int buffer_index = 0;
   while (*curr != '\0')
   {
-
+    Token token;
+    char buffer[1024];
+    int buffer_index = 0;
     if (_isspace((unsigned char)*curr))
     {
       curr++;
@@ -126,21 +125,6 @@ void TOK_consume(CList tokens)
 
   CL_pop(tokens);
 }
-
-/*
-void print_token(int pos, Token token, void *cb_data)
-{
-
-  printf("%s %s;", TT_to_str(token.type), token.value);
-}
-
-void TOK_print(CList tokens)
-{
-
-  CL_foreach(tokens, (CL_foreach_callback)print_token, NULL);
-}
-*/
-
 
 void TOK_free_tokens(CList tokens)
 {
