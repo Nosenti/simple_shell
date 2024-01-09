@@ -1,11 +1,3 @@
-/*
- * tokenize.c
- *
- * Functions to tokenize and manipulate lists of tokens
- *
- * Author: Innocent Ingabire <iingabir@andrew.cmu.edu>
- */
-
 #include "shell.h"
 #include <stdio.h>
 #include <stddef.h>

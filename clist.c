@@ -1,10 +1,3 @@
-/*
- * clist.c
- *
- * Linked list implementation
- *
- * Author: Innocent Ingabire
- */
 #include "shell.h"
 #include <stdio.h>
 #include <stdlib.h>

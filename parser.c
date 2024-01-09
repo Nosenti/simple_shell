@@ -1,11 +1,3 @@
-/*
- * parser.c
- *
- * Code that implements a parser of tokens and build the pipeline structure
- *
- * Author: Innocent Ingabire <iingabir@andrew.cmu.edu>
- */
-
 #include "shell.h"
 #include <stdlib.h>
 #include <string.h>

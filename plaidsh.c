@@ -1,8 +1,5 @@
 #include "shell.h"
 
-
-
-
 /**
  * main - check the code
  *

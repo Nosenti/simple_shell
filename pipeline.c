@@ -1,10 +1,3 @@
-/*
- * pipeline.c
- *
- * Implementation of the pipeline data structure.
- *
- * Author: Innocent Ingabire
- */
 #include "shell.h"
 #include <stdlib.h>
 #include <string.h>
