@@ -6,12 +6,14 @@ int is_builtin_command(char *cmd);
 void handle_builtin_command(char *cmd, char **args);
 extern char **environ;
 
+void sigint_handler(int sig);
+
 /**
  * main - check the code
  *
  * Return: Always 0.
  */
-int main()
+int main(void)
 {
     char *input;
     CList tokens = NULL;
@@ -19,19 +21,34 @@ int main()
     ssize_t nread = 0;
     char errmsg[128];
 
-    _puts("Welcome to Plaid Shell!\n");
+    /* Setting up the signal handler for SIGINT (Ctrl+C) */
+    signal(SIGINT, sigint_handler);
 
-    while (nread != EOF)
+    while (1)
     {
-        _puts("\n#? ");
-        fflush(stdout);  
+        _puts("#cisfun$ ");
+        fflush(stdout);
 
-        nread = getline(&input, &len, stdin); 
-        if(input[nread-1] == '\n') {
+        nread = getline(&input, &len, stdin);
+        if (nread == -1)
+        {
+            if (errno == EINTR) 
+            {
+                continue;
+            }
+            else
+            {
+                break; 
+            }
+        }
+
+        if(input[nread-1] == '\n')
+        {
             input[nread-1] = '\0';
         }
 
-        if (input[0] == '\0') { 
+        if (input[0] == '\0') 
+        { 
             continue;
         }
         
@@ -39,14 +56,14 @@ int main()
 
         if (tokens == NULL)
         {
-            _puts(errmsg);
+            printf("%s\n", errmsg);
         }
         else
         {
             Pipeline *pipeline = parse_tokens(tokens, errmsg);
             if (pipeline == NULL)
             {
-                _puts(errmsg);
+                printf("%s\n", errmsg);
             }
             else
             {
@@ -57,42 +74,57 @@ int main()
             TOK_free_tokens(tokens);
         }
 
-       
+        free(input);
+        input = NULL;
+        len = 0;
     }
     return 0;
 }
 
-char* find_command_in_path(char* cmd) {
+void sigint_handler(int sig)
+{
+    (void)sig;
+
+    _puts("\n#cisfun$ ");
+    signal(SIGINT, sigint_handler);
+}
+
+char *find_command_in_path(char *cmd)
+{
     char *path = getenv("PATH");
     char *path_copy = _strdup(path);
     char *dir = strtok(path_copy, ":");
 
-    if (!path) return NULL; 
+    if (!path)
+        return NULL;
 
-    while (dir != NULL) {
-        size_t full_path_len = _strlen(dir) + _strlen(cmd) + 2; 
-        char *full_path = malloc(full_path_len); 
+    while (dir != NULL)
+    {
+        size_t full_path_len = _strlen(dir) + _strlen(cmd) + 2;
+        char *full_path = malloc(full_path_len);
 
-        if (!full_path) {
-            free(path_copy);  
-            return NULL;  
+        if (!full_path)
+        {
+            free(path_copy);
+            return NULL;
         }
-        
+
         _strcpy(full_path, dir);
         _strcat(full_path, "/");
         _strcat(full_path, cmd);
 
-        if (access(full_path, X_OK) == 0) {
+        if (access(full_path, X_OK) == 0)
+        {
             free(path_copy);
-            return full_path; 
+            return full_path;
         }
 
-        free(full_path); 
-        dir = strtok(NULL, ":"); 
+        free(full_path);
+        dir = strtok(NULL, ":");
     }
 
-    free(path_copy); 
-    return NULL; 
+    free(path_copy);
+    return NULL;
 }
 
 void execute_pipeline(Pipeline *pipeline)
@@ -102,11 +134,12 @@ void execute_pipeline(Pipeline *pipeline)
     int i, j;
 
     pipe_fds = (int *)malloc(2 * num_pipes * sizeof(int));
-    if (pipe_fds == NULL) {
+    if (pipe_fds == NULL)
+    {
         perror("malloc");
         exit(EXIT_FAILURE);
     }
-   
+
     for (i = 0; i < num_pipes; i++)
     {
         if (pipe(pipe_fds + i * 2) < 0)
@@ -120,29 +153,30 @@ void execute_pipeline(Pipeline *pipeline)
     {
         Command *cmd = &pipeline->commands[i];
         pid_t pid = fork();
-        
+
         int num_args = CL_length(cmd->args);
-        char **args = malloc((num_args + 2) * sizeof(char *)); 
+        char **args = malloc((num_args + 2) * sizeof(char *));
         args[0] = find_command_in_path(cmd->name);
-        if (!args[0]) {
-            args[0] = cmd->name; 
+        if (!args[0])
+        {
+            args[0] = cmd->name;
         }
         for (j = 0; j < num_args; j++)
         {
-            Token arg = CL_nth(cmd->args, j); 
+            Token arg = CL_nth(cmd->args, j);
             args[j + 1] = arg.value;
         }
         args[num_args + 1] = NULL;
-        
+
         if (is_builtin_command(cmd->name))
         {
             handle_builtin_command(cmd->name, args);
-            if (args[0] != cmd->name) free(args[0]);
+            if (args[0] != cmd->name)
+                free(args[0]);
             free(args);
             continue;
         }
 
-        
         if (pid < 0)
         {
             perror("fork");
@@ -150,8 +184,8 @@ void execute_pipeline(Pipeline *pipeline)
         }
 
         if (pid == 0)
-        { 
-            
+        {
+
             for (j = 0; j < 2 * num_pipes; j++)
             {
                 close(pipe_fds[j]);
@@ -163,16 +197,16 @@ void execute_pipeline(Pipeline *pipeline)
                 exit(EXIT_FAILURE);
             }
         }
-        if (args[0] != cmd->name) free(args[0]); 
+        if (args[0] != cmd->name)
+            free(args[0]);
         free(args);
     }
 
-    
     for (i = 0; i < 2 * num_pipes; i++)
     {
         close(pipe_fds[i]);
     }
-    
+
     for (i = 0; i < pipeline->command_count; i++)
     {
         wait(NULL);
@@ -184,8 +218,9 @@ void execute_command(char *cmd, char **args)
     int i;
     char *full_path = find_command_in_path(cmd);
     pid_t pid = fork();
-    if (!full_path) {
-        full_path = cmd; 
+    if (!full_path)
+    {
+        full_path = cmd;
     }
 
     if (pid == -1)
@@ -211,7 +246,8 @@ void execute_command(char *cmd, char **args)
         int status;
         waitpid(pid, &status, 0);
     }
-    if (full_path != cmd) {
+    if (full_path != cmd)
+    {
         free(full_path);
     }
 }
@@ -233,21 +269,22 @@ int is_builtin_command(char *cmd)
 
 void handle_builtin_command(char *cmd, char **args)
 {
-    if (strcmp(cmd, "exit") == 0 || strcmp(cmd, "quit") == 0)
+    if (_strcmp(cmd, "exit") == 0 || _strcmp(cmd, "quit") == 0)
     {
         exit(0);
     }
-    else if (strcmp(cmd, "author") == 0)
+    else if (_strcmp(cmd, "author") == 0)
     {
         char *author = "Innocent Ingabire";
         _puts(author);
     }
-    else if (strcmp(cmd, "cd") == 0)
+    else if (_strcmp(cmd, "cd") == 0)
     {
 
         const char *dir = getenv("HOME");
 
-        if(args[1] && strcmp(args[1], "~") != 0){
+        if (args[1] && _strcmp(args[1], "~") != 0)
+        {
             dir = args[1];
         }
 
@@ -256,7 +293,7 @@ void handle_builtin_command(char *cmd, char **args)
             perror("chdir");
         }
     }
-    else if (strcmp(cmd, "pwd") == 0)
+    else if (_strcmp(cmd, "pwd") == 0)
     {
         char cwd[1024];
         if (getcwd(cwd, sizeof(cwd)) != NULL)
