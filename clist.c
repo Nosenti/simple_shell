@@ -72,7 +72,7 @@ int CL_length(CList list)
 #ifdef DEBUG
 
     int len = 0;
-    struct _cl_node *node
+    struct _cl_node *node;
     for ( node = list->head; node != NULL; node = node->next)
         len++;
     
