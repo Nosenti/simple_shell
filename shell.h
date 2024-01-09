@@ -56,14 +56,15 @@ char *_strdup(char *str);
 int _isspace(int c);
 
 const char *TT_to_str(TokenType tt);
-CList TOK_tokenize_input(const char *input, char *errmsg, size_t errmsg_sz);
+CList TOK_tokenize_input(const char *input);
 TokenType TOK_next_type(CList tokens);
 Token TOK_next(CList tokens);
 void TOK_consume(CList tokens);
-void TOK_print(CList tokens);
+/*void TOK_print(CList tokens);*/
 void TOK_free_tokens(CList tokens);
 
-#define INVALID_RETURN ((CListElementType) {TOK_END})
+extern const CListElementType INVALID_RETURN;
+
 
 CList CL_new();
 void CL_free(CList list);
@@ -81,11 +82,11 @@ void CL_foreach(CList list, CL_foreach_callback callback, void *cb_data);
 
 Pipeline *Pipeline_new();
 void Pipeline_free(Pipeline *pipeline);
-void Pipeline_set_input_file(Pipeline *pipeline, const char *filename);
-void Pipeline_set_output_file(Pipeline *pipeline, const char *filename);
-void Pipeline_add_command(Pipeline *pipeline, const char *command_name);
-void Pipeline_add_argument(Pipeline *pipeline, const char *argument);
+void Pipeline_set_input_file(Pipeline *pipeline, char *filename);
+void Pipeline_set_output_file(Pipeline *pipeline, char *filename);
+void Pipeline_add_command(Pipeline *pipeline, char *command_name);
+void Pipeline_add_argument(Pipeline *pipeline, char *argument);
 void Pipeline_print(const Pipeline *pipeline);
-Pipeline *parse_tokens(CList tokens, char *errmsg, size_t errmsg_sz);
+Pipeline *parse_tokens(CList tokens, char *errmsg);
 
 #endif

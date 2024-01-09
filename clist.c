@@ -12,6 +12,7 @@
 
 
 #define DEBUG
+const CListElementType INVALID_RETURN = {TOK_END, NULL};
 
 struct _cl_node
 {
@@ -30,8 +31,6 @@ static struct _cl_node *
 _CL_new_node(CListElementType element, struct _cl_node *next)
 {
     struct _cl_node *new = (struct _cl_node *)malloc(sizeof(struct _cl_node));
-
-    
 
     new->element = element;
     new->next = next;
@@ -72,7 +71,7 @@ int CL_length(CList list)
 #ifdef DEBUG
 
     int len = 0;
-    struct _cl_node *node
+    struct _cl_node *node;
     for ( node = list->head; node != NULL; node = node->next)
         len++;
     
@@ -84,9 +83,10 @@ int CL_length(CList list)
 CListElementType CL_pop(CList list)
 {
     
-    struct _cl_node *popped_node = list->head;
+    struct _cl_node *popped_node;
     CListElementType ret;
 
+    popped_node = list->head;
     if (popped_node == NULL)
         return INVALID_RETURN;
     
@@ -105,6 +105,11 @@ bool CL_insert(CList list, CListElementType element, int pos)
     
 
     int len;
+    int i;
+    struct _cl_node *curr;
+    struct _cl_node *prev;
+    struct _cl_node *new_node;
+
     len = CL_length(list);
 
     if (pos <= (-1 * len) || pos > len)
@@ -117,10 +122,10 @@ bool CL_insert(CList list, CListElementType element, int pos)
         pos = len + pos + 1;
     }
 
-    unsigned int i = 0;
-    struct _cl_node *curr = list->head;
-    struct _cl_node *prev = NULL;
-    struct _cl_node *new_node = _CL_new_node(element, NULL);
+    i = 0;
+    curr = list->head;
+    prev = NULL;
+    new_node = _CL_new_node(element, NULL);
 
     if (new_node == NULL)
     {
@@ -153,16 +158,18 @@ CList CL_copy(CList list)
 {
     
 
-    CList copy = CL_new(); 
+    CList copy;
+    struct _cl_node *curr, *currcpy, *new_node;
 
-    
-    struct _cl_node *curr = list->head;
-    struct _cl_node *currcpy = NULL;
+    copy = CL_new();
+    curr = list->head;
+    currcpy = NULL;
+
 
     while (curr != NULL)
     {
         
-        struct _cl_node *new_node = _CL_new_node(curr->element, NULL);
+        new_node = _CL_new_node(curr->element, NULL);
 
         if (copy->head == NULL)
         {
@@ -189,8 +196,9 @@ void CL_push(CList list, CListElementType element)
 void CL_append(CList list, CListElementType element)
 {
     
+    struct _cl_node *new_node, *curr;
+    new_node = _CL_new_node(element, NULL);
 
-    struct _cl_node *new_node = _CL_new_node(element, NULL);
     if (!new_node)
     {
         return;
@@ -202,7 +210,7 @@ void CL_append(CList list, CListElementType element)
     }
     else
     {
-        struct _cl_node *curr = list->head;
+        curr = list->head;
 
         while (curr->next != NULL)
         {
@@ -217,7 +225,11 @@ CListElementType CL_nth(CList list, int pos)
 {
     
 
-    int length = list->length;
+    int length;
+    struct _cl_node *curr;
+    int i;
+
+    length = list->length;
     
     if (pos < -length || pos >= length)
     {
@@ -229,8 +241,8 @@ CListElementType CL_nth(CList list, int pos)
         pos = length + pos; 
     }
 
-    int i = 0;
-    struct _cl_node *curr = list->head;
+    i = 0;
+    curr = list->head;
 
     while (curr != NULL)
     {
@@ -249,7 +261,12 @@ CListElementType CL_remove(CList list, int pos)
 {
 
 
-    int len = CL_length(list);
+    int len, i;
+    struct _cl_node *curr;
+    struct _cl_node *prev;
+    CListElementType removedElement;
+
+    len = CL_length(list);
     
     if (pos < -len || pos >= len)
     {
@@ -261,10 +278,8 @@ CListElementType CL_remove(CList list, int pos)
         pos += len;
     }
 
-    struct _cl_node *curr = list->head;
-    struct _cl_node *prev = NULL;
-    CListElementType removedElement;
-
+    curr = list->head;
+    prev = NULL;
    
     if (!curr)
     {
@@ -280,7 +295,7 @@ CListElementType CL_remove(CList list, int pos)
         return removedElement;
     }
 
-    for (int i = 0; curr != NULL && i < pos; i++)
+    for (i = 0; curr != NULL && i < pos; i++)
     {
         prev = curr;
         curr = curr->next;
@@ -303,14 +318,14 @@ CListElementType CL_remove(CList list, int pos)
 void CL_join(CList list1, CList list2)
 {
    
-
+    struct _cl_node *curr;
     if (list1->head == NULL)
     {
         list1->head = list2->head;
     }
     else
     {
-        struct _cl_node *curr = list1->head;
+        curr = list1->head;
         
         while (curr->next != NULL)
         {
@@ -329,9 +344,12 @@ void CL_join(CList list1, CList list2)
 void CL_reverse(CList list)
 {
     
-    struct _cl_node *p2 = list->head;
-    struct _cl_node *p1 = NULL;
+    struct _cl_node *p2;
+    struct _cl_node *p1;
     struct _cl_node *p3;
+
+    p2 = list->head;
+    p1 = NULL;
 
     while (p2 != NULL)
     {
@@ -347,8 +365,11 @@ void CL_foreach(CList list, CL_foreach_callback callback, void *cb_data)
 {
     
 
-    struct _cl_node *curr = list->head;
-    int pos = 0;
+    struct _cl_node *curr;
+    int pos;
+
+    curr = list->head;
+    pos = 0;
 
     while (curr != NULL)
     {

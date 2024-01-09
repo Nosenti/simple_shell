@@ -12,32 +12,39 @@
 #include <stdio.h>
 
 
-static void handle_token(CList tokens, Pipeline *pipeline, int *command_index, char *errmsg, size_t errmsg_sz);
+static void handle_token(CList tokens, Pipeline *pipeline, int *command_index);
 
-Pipeline *parse_tokens(CList tokens, char *errmsg, size_t errmsg_sz) {
+Pipeline *parse_tokens(CList tokens, char *errmsg) {
+    Pipeline *pipeline = Pipeline_new();
+    int command_index = 0;
+
     if (tokens == NULL) return NULL;
 
-    Pipeline *pipeline = Pipeline_new();
-    int command_index = 0; 
+    pipeline = Pipeline_new();
+    command_index = 0; 
     while (CL_length(tokens) > 0) {
-        handle_token(tokens, pipeline, &command_index, errmsg, errmsg_sz);
+        handle_token(tokens, pipeline, &command_index);
+        
         if (*errmsg != '\0') { 
             Pipeline_free(pipeline);
             CL_free(tokens); 
             return NULL;
         }
+        
+        
     }
     return pipeline;
 }
 
-static void handle_token(CList tokens, Pipeline *pipeline, int *command_index, char *errmsg, size_t errmsg_sz) {
+static void handle_token(CList tokens, Pipeline *pipeline, int *command_index) {
+    Token token;
 
     if (CL_length(tokens) == 0) {
-        snprintf(errmsg, errmsg_sz, "Empty token list");
+        _puts( "Empty token list");
         return;
     }
 
-    Token token = CL_nth(tokens, 0);
+    token = CL_nth(tokens, 0);
 
     switch (token.type) {
         case TOK_WORD:
@@ -62,10 +69,10 @@ static void handle_token(CList tokens, Pipeline *pipeline, int *command_index, c
                     Pipeline_set_input_file(pipeline, next_token.value);
                     TOK_consume(tokens); 
                 } else {
-                    snprintf(errmsg, errmsg_sz, "Expected filename after '<'");
+                    _puts("Expected filename after '<'");
                 }
             } else {
-                snprintf(errmsg, errmsg_sz, "Expected filename after '<'");
+                _puts("Expected filename after '<'");
             }
             break;
 
@@ -76,15 +83,15 @@ static void handle_token(CList tokens, Pipeline *pipeline, int *command_index, c
                     Pipeline_set_output_file(pipeline, next_token.value);
                     TOK_consume(tokens); 
                 } else {
-                    snprintf(errmsg, errmsg_sz, "Expected filename after '>'");
+                    _puts("Expected filename after '>'");
                 }
             } else {
-                snprintf(errmsg, errmsg_sz, "Expected filename after '>'");
+                _puts("Expected filename after '>'");
             }
             break;
 
         default:
-            snprintf(errmsg, errmsg_sz, "Unexpected token: %s", token.value);
+            _puts("Unexpected token");
             break;
     }
 

@@ -11,7 +11,7 @@ extern char **environ;
  *
  * Return: Always 0.
  */
-int main(int argc, char *argv[])
+int main()
 {
     char *input;
     CList tokens = NULL;
@@ -35,7 +35,7 @@ int main(int argc, char *argv[])
             continue;
         }
         
-        tokens = TOK_tokenize_input(input, errmsg, sizeof(errmsg));
+        tokens = TOK_tokenize_input(input);
 
         if (tokens == NULL)
         {
@@ -43,7 +43,7 @@ int main(int argc, char *argv[])
         }
         else
         {
-            Pipeline *pipeline = parse_tokens(tokens, errmsg, sizeof(errmsg));
+            Pipeline *pipeline = parse_tokens(tokens, errmsg);
             if (pipeline == NULL)
             {
                 _puts(errmsg);
@@ -64,10 +64,10 @@ int main(int argc, char *argv[])
 
 char* find_command_in_path(char* cmd) {
     char *path = getenv("PATH");
-    if (!path) return NULL; 
-
     char *path_copy = _strdup(path);
     char *dir = strtok(path_copy, ":");
+
+    if (!path) return NULL; 
 
     while (dir != NULL) {
         size_t full_path_len = _strlen(dir) + _strlen(cmd) + 2; 
@@ -98,9 +98,16 @@ char* find_command_in_path(char* cmd) {
 void execute_pipeline(Pipeline *pipeline)
 {
     int num_pipes = pipeline->command_count - 1;
-    int pipe_fds[2 * num_pipes];
+    int *pipe_fds;
+    int i, j;
+
+    pipe_fds = (int *)malloc(2 * num_pipes * sizeof(int));
+    if (pipe_fds == NULL) {
+        perror("malloc");
+        exit(EXIT_FAILURE);
+    }
    
-    for (int i = 0; i < num_pipes; i++)
+    for (i = 0; i < num_pipes; i++)
     {
         if (pipe(pipe_fds + i * 2) < 0)
         {
@@ -109,9 +116,10 @@ void execute_pipeline(Pipeline *pipeline)
         }
     }
 
-    for (int i = 0; i < pipeline->command_count; i++)
+    for (i = 0; i < pipeline->command_count; i++)
     {
         Command *cmd = &pipeline->commands[i];
+        pid_t pid = fork();
         
         int num_args = CL_length(cmd->args);
         char **args = malloc((num_args + 2) * sizeof(char *)); 
@@ -119,7 +127,7 @@ void execute_pipeline(Pipeline *pipeline)
         if (!args[0]) {
             args[0] = cmd->name; 
         }
-        for (int j = 0; j < num_args; j++)
+        for (j = 0; j < num_args; j++)
         {
             Token arg = CL_nth(cmd->args, j); 
             args[j + 1] = arg.value;
@@ -134,7 +142,7 @@ void execute_pipeline(Pipeline *pipeline)
             continue;
         }
 
-        pid_t pid = fork();
+        
         if (pid < 0)
         {
             perror("fork");
@@ -144,7 +152,7 @@ void execute_pipeline(Pipeline *pipeline)
         if (pid == 0)
         { 
             
-            for (int j = 0; j < 2 * num_pipes; j++)
+            for (j = 0; j < 2 * num_pipes; j++)
             {
                 close(pipe_fds[j]);
             }
@@ -160,12 +168,12 @@ void execute_pipeline(Pipeline *pipeline)
     }
 
     
-    for (int i = 0; i < 2 * num_pipes; i++)
+    for (i = 0; i < 2 * num_pipes; i++)
     {
         close(pipe_fds[i]);
     }
     
-    for (int i = 0; i < pipeline->command_count; i++)
+    for (i = 0; i < pipeline->command_count; i++)
     {
         wait(NULL);
     }
@@ -173,12 +181,12 @@ void execute_pipeline(Pipeline *pipeline)
 
 void execute_command(char *cmd, char **args)
 {
+    int i;
     char *full_path = find_command_in_path(cmd);
+    pid_t pid = fork();
     if (!full_path) {
         full_path = cmd; 
     }
-
-    pid_t pid = fork();
 
     if (pid == -1)
     {
@@ -187,7 +195,7 @@ void execute_command(char *cmd, char **args)
     else if (pid == 0)
     {
         _puts(cmd);
-        for (int i = 0; args[i] != NULL; i++)
+        for (i = 0; args[i] != NULL; i++)
         {
             _puts(args[i]);
         }
@@ -210,10 +218,10 @@ void execute_command(char *cmd, char **args)
 
 int is_builtin_command(char *cmd)
 {
-
+    int i;
     char *builtins[] = {"exit", "cd", "quit", "author", "pwd", NULL};
 
-    for (int i = 0; builtins[i] != NULL; i++)
+    for (i = 0; builtins[i] != NULL; i++)
     {
         if (_strcmp(cmd, builtins[i]) == 0)
         {
