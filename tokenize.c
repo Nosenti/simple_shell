@@ -9,14 +9,12 @@
 #include "shell.h"
 #include <stdio.h>
 #include <stddef.h>
-#include <assert.h>
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
 
 
 
-// Documented in .h file
 const char *TT_to_str(TokenType tt)
 {
   switch (tt)
@@ -38,22 +36,22 @@ const char *TT_to_str(TokenType tt)
   __builtin_unreachable();
 }
 
-// Documented in .h file
+
 CList TOK_tokenize_input(const char *input, char *errmsg, size_t errmsg_sz) {
     CList tokens = CL_new();
 
     const char *curr = input;
     while (*curr != '\0') {
-        // Skip any whitespace
-        if (isspace((unsigned char)*curr)) {
+       
+        if (_isspace((unsigned char)*curr)) {
             curr++;
             continue;
         }
 
         Token token;
-        char buffer[1024]; // Temporary buffer to store the token's value
+        char buffer[1024]; 
         int buffer_index = 0;
-        memset(buffer, 0, sizeof(buffer));
+        _memset(buffer, 0, sizeof(buffer));
 
         if (*curr == '<') {
             token.type = TOK_LESSTHAN;
@@ -65,21 +63,20 @@ CList TOK_tokenize_input(const char *input, char *errmsg, size_t errmsg_sz) {
             token.type = TOK_PIPE;
             curr++;
         } else {
-            // Handle word or quoted word
+            
             bool in_quotes = false;
             if (*curr == '\"') {
                 in_quotes = true;
-                curr++; // Skip the opening quote
+                curr++; 
             }
 
-            while (*curr != '\0' && (in_quotes || (!isspace((unsigned char)*curr) && *curr != '<' && *curr != '>' && *curr != '|'))) {
+            while (*curr != '\0' && (in_quotes || (!_isspace((unsigned char)*curr) && *curr != '<' && *curr != '>' && *curr != '|'))) {
                 if (in_quotes && *curr == '\"') {
-                    curr++; // Skip the closing quote
+                    curr++; 
                     break;
                 }
 
                 if (*curr == '\\' && *(curr + 1) != '\0') {
-                    // Handle escape character
                     curr++; 
                 }
 
@@ -89,8 +86,6 @@ CList TOK_tokenize_input(const char *input, char *errmsg, size_t errmsg_sz) {
 
             token.type = in_quotes ? TOK_QUOTED_WORD : TOK_WORD;
         }
-
-        // Store the token's value
         token.value = strdup(buffer);
         CL_append(tokens, token);
     }
@@ -98,8 +93,6 @@ CList TOK_tokenize_input(const char *input, char *errmsg, size_t errmsg_sz) {
     return tokens;
 }
 
-
-// Documented in .h file
 TokenType TOK_next_type(CList tokens)
 {
 
@@ -111,14 +104,12 @@ TokenType TOK_next_type(CList tokens)
   return token.type;
 }
 
-// Documented in .h file
 Token TOK_next(CList tokens)
 {
 
   return CL_nth(tokens, 0);
 }
 
-// Documented in .h file
 void TOK_consume(CList tokens)
 {
 
@@ -131,7 +122,6 @@ void print_token(int pos, Token token, void *cb_data)
   printf("%s %s;", TT_to_str(token.type), token.value);
 }
 
-// Documented in .h file
 void TOK_print(CList tokens)
 {
 
@@ -151,7 +141,7 @@ void TOK_free_tokens(CList tokens) {
         }
     }
 
-    CL_free(tokens); // Free the list itself
+    CL_free(tokens); 
 }
 
 

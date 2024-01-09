@@ -14,7 +14,6 @@
 
 static void handle_token(CList tokens, Pipeline *pipeline, int *command_index, char *errmsg, size_t errmsg_sz);
 
-// Main function to parse tokens into a pipeline
 Pipeline *parse_tokens(CList tokens, char *errmsg, size_t errmsg_sz) {
     if (tokens == NULL) return NULL;
 
@@ -31,8 +30,6 @@ Pipeline *parse_tokens(CList tokens, char *errmsg, size_t errmsg_sz) {
     return pipeline;
 }
 
-
-// Helper function to process each token and update the pipeline
 static void handle_token(CList tokens, Pipeline *pipeline, int *command_index, char *errmsg, size_t errmsg_sz) {
 
     if (CL_length(tokens) == 0) {
@@ -41,8 +38,6 @@ static void handle_token(CList tokens, Pipeline *pipeline, int *command_index, c
     }
 
     Token token = CL_nth(tokens, 0);
-
-    // static int command_index = 0; 
 
     switch (token.type) {
         case TOK_WORD:
@@ -56,12 +51,11 @@ static void handle_token(CList tokens, Pipeline *pipeline, int *command_index, c
             break;
 
         case TOK_PIPE:
-            // Reset command index to indicate a new command is expected after a pipe
+            
             *command_index = 0;
             break;
 
         case TOK_LESSTHAN:
-            // Next token should be the filename for input redirection
             if (CL_length(tokens) > 1) {
                 Token next_token = CL_nth(tokens, 1);
                 if (next_token.type == TOK_WORD || next_token.type == TOK_QUOTED_WORD) {
@@ -76,7 +70,6 @@ static void handle_token(CList tokens, Pipeline *pipeline, int *command_index, c
             break;
 
         case TOK_GREATERTHAN:
-            // Next token should be the filename for output redirection
             if (CL_length(tokens) > 1) {
                 Token next_token = CL_nth(tokens, 1);
                 if (next_token.type == TOK_WORD || next_token.type == TOK_QUOTED_WORD) {

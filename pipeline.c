@@ -26,8 +26,7 @@ void Pipeline_free(Pipeline *pipeline) {
 
     for (int i = 0; i < pipeline->command_count; ++i) {
         Command *command = &pipeline->commands[i];
-
-        // Free each argument in the command's args list
+        
         while (CL_length(command->args) > 0) {
             Token arg = CL_pop(command->args);
             if (arg.value != NULL) {
@@ -105,8 +104,7 @@ void Pipeline_print(const Pipeline *pipeline) {
 
         printf("\n");
     }
-
-    // Print input and output files if they exist
+    
     if (pipeline->input_file) {
         printf("Input File: %s\n", pipeline->input_file);
     }
