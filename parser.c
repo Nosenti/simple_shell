@@ -15,10 +15,12 @@
 static void handle_token(CList tokens, Pipeline *pipeline, int *command_index, char *errmsg, size_t errmsg_sz);
 
 Pipeline *parse_tokens(CList tokens, char *errmsg, size_t errmsg_sz) {
-    if (tokens == NULL) return NULL;
-
+    
     Pipeline *pipeline = Pipeline_new();
     int command_index = 0; 
+    
+    if (tokens == NULL) return NULL;
+    
     while (CL_length(tokens) > 0) {
         handle_token(tokens, pipeline, &command_index, errmsg, errmsg_sz);
         if (*errmsg != '\0') { 
@@ -31,13 +33,12 @@ Pipeline *parse_tokens(CList tokens, char *errmsg, size_t errmsg_sz) {
 }
 
 static void handle_token(CList tokens, Pipeline *pipeline, int *command_index, char *errmsg, size_t errmsg_sz) {
+    Token token = CL_nth(tokens, 0);
 
     if (CL_length(tokens) == 0) {
         snprintf(errmsg, errmsg_sz, "Empty token list");
         return;
     }
-
-    Token token = CL_nth(tokens, 0);
 
     switch (token.type) {
         case TOK_WORD:

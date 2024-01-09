@@ -13,8 +13,6 @@
 #include <string.h>
 #include <ctype.h>
 
-
-
 const char *TT_to_str(TokenType tt)
 {
   switch (tt)
@@ -36,61 +34,73 @@ const char *TT_to_str(TokenType tt)
   __builtin_unreachable();
 }
 
+CList TOK_tokenize_input(const char *input, char *errmsg __attribute__((unused)), size_t errmsg_sz __attribute__((unused)))
+{
+  CList tokens = CL_new();
 
-CList TOK_tokenize_input(const char *input, char *errmsg, size_t errmsg_sz) {
-    CList tokens = CL_new();
-
-    const char *curr = input;
-    while (*curr != '\0') {
-       
-        if (_isspace((unsigned char)*curr)) {
-            curr++;
-            continue;
-        }
-
-        Token token;
-        char buffer[1024]; 
-        int buffer_index = 0;
-        _memset(buffer, 0, sizeof(buffer));
-
-        if (*curr == '<') {
-            token.type = TOK_LESSTHAN;
-            curr++;
-        } else if (*curr == '>') {
-            token.type = TOK_GREATERTHAN;
-            curr++;
-        } else if (*curr == '|') {
-            token.type = TOK_PIPE;
-            curr++;
-        } else {
-            
-            bool in_quotes = false;
-            if (*curr == '\"') {
-                in_quotes = true;
-                curr++; 
-            }
-
-            while (*curr != '\0' && (in_quotes || (!_isspace((unsigned char)*curr) && *curr != '<' && *curr != '>' && *curr != '|'))) {
-                if (in_quotes && *curr == '\"') {
-                    curr++; 
-                    break;
-                }
-
-                if (*curr == '\\' && *(curr + 1) != '\0') {
-                    curr++; 
-                }
-
-                buffer[buffer_index++] = *curr;
-                curr++;
-            }
-
-            token.type = in_quotes ? TOK_QUOTED_WORD : TOK_WORD;
-        }
-        token.value = strdup(buffer);
-        CL_append(tokens, token);
+  const char *curr = input;
+  while (*curr != '\0')
+  {
+    Token token;
+    char buffer[1024];
+    int buffer_index = 0;
+    if (_isspace((unsigned char)*curr))
+    {
+      curr++;
+      continue;
     }
 
-    return tokens;
+    _memset(buffer, 0, sizeof(buffer));
+
+    if (*curr == '<')
+    {
+      token.type = TOK_LESSTHAN;
+      curr++;
+    }
+    else if (*curr == '>')
+    {
+      token.type = TOK_GREATERTHAN;
+      curr++;
+    }
+    else if (*curr == '|')
+    {
+      token.type = TOK_PIPE;
+      curr++;
+    }
+    else
+    {
+
+      bool in_quotes = false;
+      if (*curr == '\"')
+      {
+        in_quotes = true;
+        curr++;
+      }
+
+      while (*curr != '\0' && (in_quotes || (!_isspace((unsigned char)*curr) && *curr != '<' && *curr != '>' && *curr != '|')))
+      {
+        if (in_quotes && *curr == '\"')
+        {
+          curr++;
+          break;
+        }
+
+        if (*curr == '\\' && *(curr + 1) != '\0')
+        {
+          curr++;
+        }
+
+        buffer[buffer_index++] = *curr;
+        curr++;
+      }
+
+      token.type = in_quotes ? TOK_QUOTED_WORD : TOK_WORD;
+    }
+    token.value = _strdup(buffer);
+    CL_append(tokens, token);
+  }
+
+  return tokens;
 }
 
 TokenType TOK_next_type(CList tokens)
@@ -116,32 +126,22 @@ void TOK_consume(CList tokens)
   CL_pop(tokens);
 }
 
-void print_token(int pos, Token token, void *cb_data)
+void TOK_free_tokens(CList tokens)
 {
+  if (tokens == NULL)
+  {
+    return;
+  }
 
-  printf("%s %s;", TT_to_str(token.type), token.value);
-}
-
-void TOK_print(CList tokens)
-{
-
-  CL_foreach(tokens, (CL_foreach_callback)print_token, NULL);
-}
-
-void TOK_free_tokens(CList tokens) {
-    if (tokens == NULL) {
-        return;
+  while (CL_length(tokens) > 0)
+  {
+    Token token = CL_pop(tokens);
+    if (token.value != NULL)
+    {
+      free(token.value);
+      token.value = NULL;
     }
+  }
 
-    while (CL_length(tokens) > 0) {
-        Token token = CL_pop(tokens);
-        if (token.value != NULL) {
-            free(token.value);
-            token.value = NULL;
-        }
-    }
-
-    CL_free(tokens); 
+  CL_free(tokens);
 }
-
-
