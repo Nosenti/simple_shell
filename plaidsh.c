@@ -13,6 +13,7 @@ void sigint_handler(int sig);
  *
  * Return: Always 0.
  */
+
 int main(void)
 {
     char *input;
@@ -21,7 +22,7 @@ int main(void)
     ssize_t nread = 0;
     char errmsg[128];
 
-    /* Setting up the signal handler for SIGINT (Ctrl+C) */
+   
     signal(SIGINT, sigint_handler);
 
     while (1)
@@ -56,14 +57,14 @@ int main(void)
 
         if (tokens == NULL)
         {
-            printf("%s\n", errmsg);
+            _puts( errmsg);
         }
         else
         {
             Pipeline *pipeline = parse_tokens(tokens, errmsg);
             if (pipeline == NULL)
             {
-                printf("%s\n", errmsg);
+                _puts(errmsg);
             }
             else
             {
@@ -79,7 +80,7 @@ int main(void)
         len = 0;
     }
     return 0;
-}
+} 
 
 void sigint_handler(int sig)
 {
@@ -230,9 +231,11 @@ void execute_command(char *cmd, char **args)
     else if (pid == 0)
     {
         _puts(cmd);
+        _puts("\n");
         for (i = 0; args[i] != NULL; i++)
         {
             _puts(args[i]);
+            _puts("\n");
         }
 
         if (execve(full_path, args, environ) == -1)
@@ -277,17 +280,15 @@ void handle_builtin_command(char *cmd, char **args)
     {
         char *author = "Innocent Ingabire";
         _puts(author);
+        fflush(stdout);
     }
     else if (_strcmp(cmd, "cd") == 0)
     {
-
         const char *dir = getenv("HOME");
-
         if (args[1] && _strcmp(args[1], "~") != 0)
         {
             dir = args[1];
         }
-
         if (chdir(dir) != 0)
         {
             perror("chdir");
@@ -299,6 +300,7 @@ void handle_builtin_command(char *cmd, char **args)
         if (getcwd(cwd, sizeof(cwd)) != NULL)
         {
             _puts(cwd);
+            fflush(stdout);
         }
         else
         {
@@ -306,3 +308,4 @@ void handle_builtin_command(char *cmd, char **args)
         }
     }
 }
+
