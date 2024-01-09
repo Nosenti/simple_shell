@@ -56,7 +56,7 @@ char *_strdup(char *str);
 int _isspace(int c);
 
 const char *TT_to_str(TokenType tt);
-CList TOK_tokenize_input(const char *input);
+CList TOK_tokenize_input(const char *input, char *errmsg, size_t errmsg_sz);
 TokenType TOK_next_type(CList tokens);
 Token TOK_next(CList tokens);
 void TOK_consume(CList tokens);

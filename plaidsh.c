@@ -6,8 +6,6 @@ int is_builtin_command(char *cmd);
 void handle_builtin_command(char *cmd, char **args);
 extern char **environ;
 
-void sigint_handler(int sig);
-
 /**
  * main - check the code
  *
@@ -50,7 +48,7 @@ int main(void)
             continue;
         }
         
-        tokens = TOK_tokenize_input(input);
+        tokens = TOK_tokenize_input(input, errmsg, sizeof(errmsg));
 
         if (tokens == NULL)
         {
@@ -58,7 +56,7 @@ int main(void)
         }
         else
         {
-            Pipeline *pipeline = parse_tokens(tokens, errmsg);
+            Pipeline *pipeline = parse_tokens(tokens, errmsg, sizeof(errmsg));
             if (pipeline == NULL)
             {
                 _puts(errmsg);
@@ -297,4 +295,3 @@ void handle_builtin_command(char *cmd, char **args)
         }
     }
 }
-

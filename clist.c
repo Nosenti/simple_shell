@@ -85,7 +85,6 @@ CListElementType CL_pop(CList list)
     struct _cl_node *popped_node = list->head;
     CListElementType ret;
 
-    popped_node = list->head;
     if (popped_node == NULL)
         return INVALID_RETURN;
 
@@ -190,6 +189,7 @@ void CL_push(CList list, CListElementType element)
 void CL_append(CList list, CListElementType element)
 {
 
+    struct _cl_node *new_node = _CL_new_node(element, NULL);
     if (!new_node)
     {
         return;
@@ -201,7 +201,7 @@ void CL_append(CList list, CListElementType element)
     }
     else
     {
-        curr = list->head;
+        struct _cl_node *curr = list->head;
 
         while (curr->next != NULL)
         {
@@ -300,6 +300,7 @@ CListElementType CL_remove(CList list, int pos)
 
 void CL_join(CList list1, CList list2)
 {
+
     if (list1->head == NULL)
     {
         list1->head = list2->head;
@@ -329,9 +330,6 @@ void CL_reverse(CList list)
     struct _cl_node *p1 = NULL;
     struct _cl_node *p3;
 
-    p2 = list->head;
-    p1 = NULL;
-
     while (p2 != NULL)
     {
         p3 = p2->next;
@@ -345,11 +343,8 @@ void CL_reverse(CList list)
 void CL_foreach(CList list, CL_foreach_callback callback, void *cb_data)
 {
 
-    struct _cl_node *curr;
-    int pos;
-
-    curr = list->head;
-    pos = 0;
+    struct _cl_node *curr = list->head;
+    int pos = 0;
 
     while (curr != NULL)
     {

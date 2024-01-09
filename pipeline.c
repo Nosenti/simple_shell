@@ -61,19 +61,19 @@ void Pipeline_free(Pipeline *pipeline) {
 }
 
 
-void Pipeline_set_input_file(Pipeline *pipeline, char *filename) {
+void Pipeline_set_input_file(Pipeline *pipeline, const char *filename) {
     if (pipeline->input_file != NULL) free(pipeline->input_file);
-    pipeline->input_file = _strdup(filename);
+    pipeline->input_file = strdup(filename);
 }
 
-void Pipeline_set_output_file(Pipeline *pipeline, char *filename) {
+void Pipeline_set_output_file(Pipeline *pipeline, const char *filename) {
     if (pipeline->output_file != NULL) free(pipeline->output_file);
-    pipeline->output_file = _strdup(filename);
+    pipeline->output_file = strdup(filename);
 }
 
-void Pipeline_add_command(Pipeline *pipeline, char *command_name) {
+void Pipeline_add_command(Pipeline *pipeline, const char *command_name) {
     pipeline->commands = realloc(pipeline->commands, sizeof(Command) * (pipeline->command_count + 1));
-    pipeline->commands[pipeline->command_count].name = _strdup(command_name);
+    pipeline->commands[pipeline->command_count].name = strdup(command_name);
     pipeline->commands[pipeline->command_count].args = CL_new();
     pipeline->command_count++;
 }
@@ -87,9 +87,8 @@ void Pipeline_add_argument(Pipeline *pipeline, const char *argument) {
 
     
     argToken.type = TOK_WORD;
-    argToken.value = _strdup(argument);
+    argToken.value = strdup(argument);
 
     CL_append(last_command->args, *(CListElementType *)&argToken);
 }
-
 
