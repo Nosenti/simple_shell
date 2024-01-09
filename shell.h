@@ -86,4 +86,9 @@ void Pipeline_add_command(Pipeline *pipeline, const char *command_name);
 void Pipeline_add_argument(Pipeline *pipeline, const char *argument);
 Pipeline *parse_tokens(CList tokens, char *errmsg, size_t errmsg_sz);
 
+void execute_pipeline(Pipeline *pipeline);
+void execute_command(char *cmd, char **args);
+int is_builtin_command(char *cmd);
+void handle_builtin_command(char *cmd, char **args);
+
 #endif
