@@ -12,39 +12,33 @@
 #include <stdio.h>
 
 
-static void handle_token(CList tokens, Pipeline *pipeline, int *command_index);
+static void handle_token(CList tokens, Pipeline *pipeline, int *command_index, char *errmsg, size_t errmsg_sz);
 
-Pipeline *parse_tokens(CList tokens, char *errmsg) {
+Pipeline *parse_tokens(CList tokens, char *errmsg, size_t errmsg_sz) {
+    
     Pipeline *pipeline = Pipeline_new();
-    int command_index = 0;
+    int command_index = 0; 
 
     if (tokens == NULL) return NULL;
-
-    pipeline = Pipeline_new();
-    command_index = 0; 
+    
     while (CL_length(tokens) > 0) {
-        handle_token(tokens, pipeline, &command_index);
-        
+        handle_token(tokens, pipeline, &command_index, errmsg, errmsg_sz);
         if (*errmsg != '\0') { 
             Pipeline_free(pipeline);
             CL_free(tokens); 
             return NULL;
         }
-        
-        
     }
     return pipeline;
 }
 
-static void handle_token(CList tokens, Pipeline *pipeline, int *command_index) {
-    Token token;
+static void handle_token(CList tokens, Pipeline *pipeline, int *command_index, char *errmsg __attribute__((unused)), size_t errmsg_sz __attribute__((unused))) {
+    Token token = CL_nth(tokens, 0);
 
     if (CL_length(tokens) == 0) {
-        _puts( "Empty token list");
+        _puts("Empty token list");
         return;
     }
-
-    token = CL_nth(tokens, 0);
 
     switch (token.type) {
         case TOK_WORD:
@@ -69,7 +63,7 @@ static void handle_token(CList tokens, Pipeline *pipeline, int *command_index) {
                     Pipeline_set_input_file(pipeline, next_token.value);
                     TOK_consume(tokens); 
                 } else {
-                    _puts("Expected filename after '<'");
+                    _puts( "Expected filename after '<'");
                 }
             } else {
                 _puts("Expected filename after '<'");
